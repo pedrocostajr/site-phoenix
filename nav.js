@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function () {
         `💰 Orçamento Mídia: ${budget}`
       );
 
-      const waBtnHtml = `<br><a href="https://wa.me/5500000000000?text=${encodedMsg}" target="_blank" rel="noopener" style="display:inline-block; margin-top:14px; padding:10px 20px; background:#25D366; color:#fff; border-radius:24px; font-weight:600; text-decoration:none;">Falar imediatamente no WhatsApp →</a>`;
+      const waBtnHtml = `<br><a href="https://wa.me/5554996895454?text=${encodedMsg}" target="_blank" rel="noopener" style="display:inline-block; margin-top:14px; padding:10px 20px; background:#25D366; color:#fff; border-radius:24px; font-weight:600; text-decoration:none;">Falar imediatamente no WhatsApp →</a>`;
       if (successMsg) {
         successMsg.innerHTML += waBtnHtml;
       }
