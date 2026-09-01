@@ -333,15 +333,14 @@ nav {
   right: 0;
   bottom: 0;
   background-image: 
-    linear-gradient(180deg, rgba(7, 10, 18, 0.72) 0%, rgba(7, 10, 18, 0.85) 55%, rgba(7, 10, 18, 0.98) 100%),
+    linear-gradient(180deg, rgba(7, 10, 18, 0.70) 0%, rgba(7, 10, 18, 0.82) 55%, rgba(7, 10, 18, 0.98) 100%),
     radial-gradient(circle at 75% 35%, rgba(37, 99, 235, 0.35) 0%, rgba(7, 10, 18, 0.6) 70%),
-    url('assets/bg-hero-region.jpg'),
-    url('file:///Users/pedrocostajr/.gemini/antigravity/brain/6f9dfbda-5f4c-48e2-9a64-2caa8e67e606/bg_hero_region_1788213054669.jpg');
+    url('assets/bg-hero-region.jpg');
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
-  opacity: 0.38;
-  filter: saturate(1.15) brightness(0.9);
+  opacity: 0.42;
+  filter: saturate(1.15) brightness(0.92);
   pointer-events: none;
   z-index: 0;
 }
