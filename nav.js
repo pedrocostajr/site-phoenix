@@ -2,10 +2,13 @@
    PHOENIX RISE — NAVIGATION, INTERACTION & PHOENIX CRM INTEGRATION SCRIPT
    ========================================================================== */
 
-// PHOENIX CRM CONFIGURATION
+// PHOENIX CRM CONFIGURATION (MULTIPLE WEBHOOK ENDPOINTS)
 const PHOENIX_CRM_CONFIG = {
   enabled: true,
-  webhookUrl: 'https://crm-phoenixrise.vercel.app/api/webhook',
+  webhooks: [
+    'https://crm-phoenixrise.vercel.app/api/webhook',
+    'https://sistema-agencias.vercel.app/api/webhook'
+  ],
   apiKey: '', // Chave de API se necessário (opcional)
   sourceName: 'Website Phoenix Rise - Formulário de Diagnóstico'
 };
@@ -53,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // 3. Lead Form & Phoenix CRM Submission Handler
+  // 3. Lead Form & Phoenix CRM Submission Handler (Multi-Webhook Dispatch)
   const leadForm = document.getElementById('lead-diagnostic-form');
   const successMsg = document.getElementById('form-success-msg');
 
@@ -87,24 +90,31 @@ document.addEventListener('DOMContentLoaded', function () {
         pageUrl: window.location.href
       };
 
-      // Send Lead Payload to Phoenix CRM Endpoint
-      if (PHOENIX_CRM_CONFIG.enabled && PHOENIX_CRM_CONFIG.webhookUrl) {
-        try {
+      // Send Lead Payload to all configured Webhook Endpoints in Parallel
+      if (PHOENIX_CRM_CONFIG.enabled && PHOENIX_CRM_CONFIG.webhooks.length > 0) {
+        const fetchPromises = PHOENIX_CRM_CONFIG.webhooks.map(url => {
           const headers = { 'Content-Type': 'application/json' };
           if (PHOENIX_CRM_CONFIG.apiKey) {
             headers['Authorization'] = `Bearer ${PHOENIX_CRM_CONFIG.apiKey}`;
           }
 
-          const response = await fetch(PHOENIX_CRM_CONFIG.webhookUrl, {
+          return fetch(url, {
             method: 'POST',
             headers: headers,
             body: JSON.stringify(leadPayload)
+          }).then(res => {
+            console.log(`[Phoenix CRM] Lead cadastrado em ${url}:`, res.status);
+            return res;
+          }).catch(err => {
+            console.warn(`[Phoenix CRM] Erro no webhook ${url}:`, err);
+            throw err;
           });
+        });
 
-          console.log('[Phoenix CRM] Lead cadastrado com sucesso:', response.status);
+        try {
+          await Promise.allSettled(fetchPromises);
         } catch (error) {
-          console.warn('[Phoenix CRM] Erro ao enviar lead para o CRM:', error);
-          // Salvamento preventivo no LocalStorage para não perder nenhum lead se falhar a rede
+          console.warn('[Phoenix CRM] Erro no processamento dos webhooks:', error);
           saveLeadBackupLocally(leadPayload);
         }
       } else {
@@ -146,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function () {
     try {
       const existingLeads = JSON.parse(localStorage.getItem('phoenix_rise_leads') || '[]');
       existingLeads.push(leadData);
-      localStorage.getItem('phoenix_rise_leads', JSON.stringify(existingLeads));
+      localStorage.setItem('phoenix_rise_leads', JSON.stringify(existingLeads));
     } catch (err) {
       console.error('Local backup failed', err);
     }
@@ -158,15 +168,15 @@ document.addEventListener('DOMContentLoaded', function () {
     const scrollY = window.pageYOffset;
     sections.forEach(current => {
       const sectionHeight = current.offsetHeight;
-      const sectionTop = current.offsetTop - 120;
+      const sectionTop = current.offsetTop - 100;
       const sectionId = current.getAttribute('id');
-      const navAnchor = document.querySelector(`.nav-links a[href*="#${sectionId}"]`);
-      
-      if (navAnchor) {
+      const navItem = document.querySelector(`.nav-links a[href*=${sectionId}]`);
+
+      if (navItem) {
         if (scrollY > sectionTop && scrollY <= sectionTop + sectionHeight) {
-          navAnchor.classList.add('active');
+          navItem.classList.add('active');
         } else {
-          navAnchor.classList.remove('active');
+          navItem.classList.remove('active');
         }
       }
     });
