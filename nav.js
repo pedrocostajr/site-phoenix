@@ -6,8 +6,8 @@
 const PHOENIX_CRM_CONFIG = {
   enabled: true,
   webhooks: [
-    'https://crm-phoenixrise.vercel.app/api/webhook',
-    'https://os.phoenixrise.com.br/api/webhook'
+    'https://os.phoenixrise.com.br/api/public/webhooks/B0IkE53_BBO_PT08aE2bHCEV68fe0r3d',
+    'https://crm-phoenixrise.vercel.app/api/webhook'
   ],
   apiKey: '', // Chave de API se necessário (opcional)
   sourceName: 'Website Phoenix Rise - Formulário de Diagnóstico'
