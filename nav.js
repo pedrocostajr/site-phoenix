@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // 3. Lead Form & Phoenix CRM Submission Handler (Multi-Webhook Dispatch)
+  // 3. Lead Form & Phoenix CRM Submission Handler (Multi-Webhook & Rich Compatibility Payload)
   const leadForm = document.getElementById('lead-diagnostic-form');
   const successMsg = document.getElementById('form-success-msg');
 
@@ -79,12 +79,23 @@ document.addEventListener('DOMContentLoaded', function () {
       const budget = document.getElementById('form-budget')?.value || 'Não informado';
 
       const leadPayload = {
+        // Standard & Portuguese field mappings for complete CRM compatibility
         name: name,
+        nome: name,
         email: email,
         phone: phone,
+        telefone: phone,
+        whatsapp: phone,
         segment: segment,
+        segmento: segment,
+        empresa: segment,
         budget: budget,
+        orcamento: budget,
+        valor: budget,
         source: PHOENIX_CRM_CONFIG.sourceName,
+        origem: PHOENIX_CRM_CONFIG.sourceName,
+        notes: `Lead do Site Phoenix Rise. Segmento: ${segment} | Orçamento: ${budget}`,
+        observacoes: `Lead do Site Phoenix Rise. Segmento: ${segment} | Orçamento: ${budget}`,
         createdAt: new Date().toISOString(),
         userAgent: navigator.userAgent,
         pageUrl: window.location.href
