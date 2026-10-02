@@ -2,11 +2,11 @@
    PHOENIX RISE — NAVIGATION, INTERACTION & PHOENIX CRM INTEGRATION SCRIPT
    ========================================================================== */
 
-// PHOENIX CRM CONFIGURATION (MULTIPLE WEBHOOK ENDPOINTS)
+// PHOENIX CRM CONFIGURATION (DEFINITIVE WEBHOOK ENDPOINTS)
 const PHOENIX_CRM_CONFIG = {
   enabled: true,
   webhooks: [
-    'https://os.phoenixrise.com.br/api/public/webhooks/B0IkE53_BBO_PT08aE2bHCEV68fe0r3d',
+    'https://os.phoenixrise.com.br/api/public/webhooks/HEl5S7aEep1SyoDSp5F2UnqmykQ13Y7d',
     'https://crm-phoenixrise.vercel.app/api/webhook'
   ],
   apiKey: '', // Chave de API se necessário (opcional)
