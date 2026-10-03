@@ -2,14 +2,14 @@
    PHOENIX RISE — NAVIGATION, INTERACTION & PHOENIX CRM INTEGRATION SCRIPT
    ========================================================================== */
 
-// PHOENIX CRM CONFIGURATION (DEFINITIVE WEBHOOK ENDPOINTS)
+// PHOENIX CRM CONFIGURATION
 const PHOENIX_CRM_CONFIG = {
   enabled: true,
+  proxyEndpoint: '/api/webhook',
   webhooks: [
     'https://os.phoenixrise.com.br/api/public/webhooks/HEl5S7aEep1SyoDSp5F2UnqmykQ13Y7d',
     'https://crm-phoenixrise.vercel.app/api/webhook'
   ],
-  apiKey: '', // Chave de API se necessário (opcional)
   sourceName: 'Website Phoenix Rise - Formulário de Diagnóstico'
 };
 
@@ -56,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
-  // 3. Lead Form & Phoenix CRM Submission Handler (Multi-Webhook & Rich Compatibility Payload)
+  // 3. Lead Form Submission Handler (Proxy + Direct Multi-Channel Dispatch)
   const leadForm = document.getElementById('lead-diagnostic-form');
   const successMsg = document.getElementById('form-success-msg');
 
@@ -79,7 +79,6 @@ document.addEventListener('DOMContentLoaded', function () {
       const budget = document.getElementById('form-budget')?.value || 'Não informado';
 
       const leadPayload = {
-        // Standard & Portuguese field mappings for complete CRM compatibility
         name: name,
         nome: name,
         email: email,
@@ -101,34 +100,32 @@ document.addEventListener('DOMContentLoaded', function () {
         pageUrl: window.location.href
       };
 
-      // Send Lead Payload to all configured Webhook Endpoints in Parallel
-      if (PHOENIX_CRM_CONFIG.enabled && PHOENIX_CRM_CONFIG.webhooks.length > 0) {
-        const fetchPromises = PHOENIX_CRM_CONFIG.webhooks.map(url => {
-          const headers = { 'Content-Type': 'application/json' };
-          if (PHOENIX_CRM_CONFIG.apiKey) {
-            headers['Authorization'] = `Bearer ${PHOENIX_CRM_CONFIG.apiKey}`;
-          }
+      const dispatchPromises = [];
 
-          return fetch(url, {
+      // A) Dispatch via Same-Origin Vercel Proxy /api/webhook (Bypasses all CORS restrictions)
+      dispatchPromises.push(
+        fetch(PHOENIX_CRM_CONFIG.proxyEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(leadPayload)
+        }).then(r => r.json()).catch(err => console.warn('[Proxy Dispatch Warning]', err))
+      );
+
+      // B) Direct fetch with text/plain content-type to avoid CORS preflight blocking
+      PHOENIX_CRM_CONFIG.webhooks.forEach(url => {
+        dispatchPromises.push(
+          fetch(url, {
             method: 'POST',
-            headers: headers,
+            headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
             body: JSON.stringify(leadPayload)
-          }).then(res => {
-            console.log(`[Phoenix CRM] Lead cadastrado em ${url}:`, res.status);
-            return res;
-          }).catch(err => {
-            console.warn(`[Phoenix CRM] Erro no webhook ${url}:`, err);
-            throw err;
-          });
-        });
+          }).then(r => console.log('[Direct Dispatch Success]', url)).catch(err => console.warn('[Direct Dispatch Warning]', url, err))
+        );
+      });
 
-        try {
-          await Promise.allSettled(fetchPromises);
-        } catch (error) {
-          console.warn('[Phoenix CRM] Erro no processamento dos webhooks:', error);
-          saveLeadBackupLocally(leadPayload);
-        }
-      } else {
+      try {
+        await Promise.allSettled(dispatchPromises);
+      } catch (error) {
+        console.warn('[Phoenix CRM Dispatch Error]', error);
         saveLeadBackupLocally(leadPayload);
       }
 
