@@ -1,20 +1,51 @@
 /* ==========================================================================
-   PHOENIX RISE — NAVIGATION, INTERACTION & PHOENIX CRM INTEGRATION SCRIPT
+   PHOENIX RISE — NAVIGATION, INTERACTION & PHOENIX OS WEBHOOK INTEGRATION
    ========================================================================== */
 
-// PHOENIX CRM CONFIGURATION
-const PHOENIX_CRM_CONFIG = {
-  enabled: true,
-  proxyEndpoint: '/api/webhook',
-  webhooks: [
-    'https://os.phoenixrise.com.br/api/public/webhooks/HEl5S7aEep1SyoDSp5F2UnqmykQ13Y7d',
-    'https://crm-phoenixrise.vercel.app/api/webhook'
-  ],
-  sourceName: 'Website Phoenix Rise - Formulário de Diagnóstico'
-};
+// 1. Constante única do Webhook
+const PHOENIX_WEBHOOK_URL = 'https://os.phoenixrise.com.br/api/public/webhooks/HEl5S7aEep1SyoDSp5F2UnqmykQ13Y7d';
+
+// 2. Captura e persistência de parâmetros UTM no sessionStorage
+function captureAndStoreUTMs() {
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    const utmKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
+    
+    utmKeys.forEach(key => {
+      const val = urlParams.get(key);
+      if (val && val.trim() !== '') {
+        sessionStorage.setItem(key, val.trim());
+      }
+    });
+  } catch (err) {
+    console.warn('[UTM Storage Warning]', err);
+  }
+}
+
+// Executa a captura de UTMs imediatamente ao carregar o script
+captureAndStoreUTMs();
+
+function getUTMData() {
+  const utmKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
+  const utms = {};
+  
+  try {
+    const urlParams = new URLSearchParams(window.location.search);
+    utmKeys.forEach(key => {
+      const val = urlParams.get(key) || sessionStorage.getItem(key);
+      if (val && val.trim() !== '') {
+        utms[key] = val.trim();
+      }
+    });
+  } catch (err) {
+    console.warn('[UTM Retrieval Warning]', err);
+  }
+  
+  return utms;
+}
 
 document.addEventListener('DOMContentLoaded', function () {
-  // 1. Mobile Nav Toggle
+  // Mobile Nav Toggle
   const toggle = document.querySelector('.nav-toggle');
   const navLinks = document.querySelector('.nav-links');
   
@@ -24,7 +55,6 @@ document.addEventListener('DOMContentLoaded', function () {
       toggle.setAttribute('aria-expanded', navLinks.classList.contains('mobile-open'));
     });
 
-    // Close menu when clicking a link
     navLinks.querySelectorAll('a').forEach(link => {
       link.addEventListener('click', () => {
         navLinks.classList.remove('mobile-open');
@@ -32,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  // 2. FAQ Accordion Handler
+  // FAQ Accordion Handler
   const faqQuestions = document.querySelectorAll('.faq-question');
   faqQuestions.forEach(question => {
     question.addEventListener('click', () => {
@@ -40,8 +70,6 @@ document.addEventListener('DOMContentLoaded', function () {
       if (!item) return;
 
       const isCurrentActive = item.classList.contains('active');
-
-      // Close other accordion items in the same container
       const parentAccordion = item.closest('.faq-accordion');
       if (parentAccordion) {
         parentAccordion.querySelectorAll('.faq-item').forEach(sibling => {
@@ -49,14 +77,13 @@ document.addEventListener('DOMContentLoaded', function () {
         });
       }
 
-      // Toggle current item
       if (!isCurrentActive) {
         item.classList.add('active');
       }
     });
   });
 
-  // 3. Lead Form Submission Handler (Proxy + Direct Multi-Channel Dispatch)
+  // Lead Diagnostic Form Submission Handler
   const leadForm = document.getElementById('lead-diagnostic-form');
   const successMsg = document.getElementById('form-success-msg');
 
@@ -69,108 +96,98 @@ document.addEventListener('DOMContentLoaded', function () {
       
       if (submitBtn) {
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span>Enviando para o CRM...</span>';
+        submitBtn.innerHTML = '<span>Enviando...</span>';
       }
 
-      const name = document.getElementById('form-name')?.value || '';
-      const email = document.getElementById('form-email')?.value || '';
-      const phone = document.getElementById('form-phone')?.value || '';
-      const segment = document.getElementById('form-segment')?.value || 'Não informado';
-      const budget = document.getElementById('form-budget')?.value || 'Não informado';
-
-      const leadPayload = {
-        name: name,
-        nome: name,
-        email: email,
-        phone: phone,
-        telefone: phone,
-        whatsapp: phone,
-        segment: segment,
-        segmento: segment,
-        empresa: segment,
-        budget: budget,
-        orcamento: budget,
-        valor: budget,
-        source: PHOENIX_CRM_CONFIG.sourceName,
-        origem: PHOENIX_CRM_CONFIG.sourceName,
-        notes: `Lead do Site Phoenix Rise. Segmento: ${segment} | Orçamento: ${budget}`,
-        observacoes: `Lead do Site Phoenix Rise. Segmento: ${segment} | Orçamento: ${budget}`,
-        createdAt: new Date().toISOString(),
-        userAgent: navigator.userAgent,
-        pageUrl: window.location.href
+      // Monta objeto com todos os possíveis campos
+      const rawPayload = {
+        nome: document.getElementById('form-name')?.value?.trim(),
+        email: document.getElementById('form-email')?.value?.trim(),
+        telefone: document.getElementById('form-phone')?.value?.trim(),
+        empresa: document.getElementById('form-company')?.value?.trim() || document.getElementById('form-empresa')?.value?.trim(),
+        segmento: document.getElementById('form-segment')?.value?.trim(),
+        orcamento: document.getElementById('form-budget')?.value?.trim(),
+        mensagem: document.getElementById('form-message')?.value?.trim() || document.getElementById('form-mensagem')?.value?.trim(),
+        origem: 'Website Phoenix Rise',
+        ...getUTMData(),
+        pagina: window.location.href
       };
 
-      const dispatchPromises = [];
-
-      // A) Dispatch via Same-Origin Vercel Proxy /api/webhook (Bypasses all CORS restrictions)
-      dispatchPromises.push(
-        fetch(PHOENIX_CRM_CONFIG.proxyEndpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(leadPayload)
-        }).then(r => r.json()).catch(err => console.warn('[Proxy Dispatch Warning]', err))
-      );
-
-      // B) Direct fetch with text/plain content-type to avoid CORS preflight blocking
-      PHOENIX_CRM_CONFIG.webhooks.forEach(url => {
-        dispatchPromises.push(
-          fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
-            body: JSON.stringify(leadPayload)
-          }).then(r => console.log('[Direct Dispatch Success]', url)).catch(err => console.warn('[Direct Dispatch Warning]', url, err))
-        );
+      // Filtra para enviar somente os campos que possuem valor preenchido
+      const dados = {};
+      Object.keys(rawPayload).forEach(key => {
+        const val = rawPayload[key];
+        if (val !== undefined && val !== null && String(val).trim() !== '') {
+          dados[key] = String(val).trim();
+        }
       });
 
       try {
-        await Promise.allSettled(dispatchPromises);
-      } catch (error) {
-        console.warn('[Phoenix CRM Dispatch Error]', error);
-        saveLeadBackupLocally(leadPayload);
+        const response = await fetch(PHOENIX_WEBHOOK_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(dados),
+          keepalive: true
+        });
+
+        if (!response.ok) {
+          const errorBody = await response.text();
+          console.error(`[Webhook Error] Status: ${response.status}`, errorBody);
+          if (successMsg) {
+            successMsg.style.display = 'block';
+            successMsg.style.color = '#EF4444';
+            successMsg.innerHTML = 'Não foi possível enviar, tente novamente';
+          }
+          return;
+        }
+
+        const jsonResult = await response.json().catch(() => ({}));
+
+        if (jsonResult && jsonResult.ok === true) {
+          if (successMsg) {
+            successMsg.style.display = 'block';
+            successMsg.style.color = '';
+            successMsg.innerHTML = `✨ <strong>Obrigado, ${(dados.nome || '').split(' ')[0]}!</strong> Seu diagnóstico foi agendado com sucesso.<br>Nossa equipe entrará em contato em breve via WhatsApp (${dados.telefone || ''}) ou E-mail.`;
+            
+            const encodedMsg = encodeURIComponent(
+              `Olá! Acabei de enviar o formulário no site Phoenix Rise.\n\n` +
+              `👤 Nome: ${dados.nome || ''}\n` +
+              `📧 E-mail: ${dados.email || ''}\n` +
+              `📱 WhatsApp: ${dados.telefone || ''}\n` +
+              `🏢 Segmento: ${dados.segmento || ''}\n` +
+              `💰 Orçamento Mídia: ${dados.orcamento || ''}`
+            );
+            successMsg.innerHTML += `<br><a href="https://wa.me/5554996895454?text=${encodedMsg}" target="_blank" rel="noopener" style="display:inline-block; margin-top:14px; padding:10px 20px; background:#25D366; color:#fff; border-radius:24px; font-weight:600; text-decoration:none;">Falar imediatamente no WhatsApp →</a>`;
+          }
+
+          leadForm.reset();
+        } else {
+          console.error('[Webhook Error] Resposta sem ok: true', jsonResult);
+          if (successMsg) {
+            successMsg.style.display = 'block';
+            successMsg.style.color = '#EF4444';
+            successMsg.innerHTML = 'Não foi possível enviar, tente novamente';
+          }
+        }
+      } catch (err) {
+        console.error('[Webhook Error]', err);
+        if (successMsg) {
+          successMsg.style.display = 'block';
+          successMsg.style.color = '#EF4444';
+          successMsg.innerHTML = 'Não foi possível enviar, tente novamente';
+        }
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnText;
+        }
       }
-
-      // Visual success state
-      if (successMsg) {
-        successMsg.style.display = 'block';
-        successMsg.innerHTML = `✨ <strong>Obrigado, ${name.split(' ')[0]}!</strong> Seu cadastro foi enviado para o nosso sistema.<br>Nossa equipe entrará em contato em breve via WhatsApp (${phone}) ou E-mail.`;
-      }
-
-      // Construct WhatsApp direct trigger message link
-      const encodedMsg = encodeURIComponent(
-        `Olá! Acabei de enviar o formulário no site Phoenix Rise.\n\n` +
-        `👤 Nome: ${name}\n` +
-        `📧 E-mail: ${email}\n` +
-        `📱 WhatsApp: ${phone}\n` +
-        `🏢 Segmento: ${segment}\n` +
-        `💰 Orçamento Mídia: ${budget}`
-      );
-
-      const waBtnHtml = `<br><a href="https://wa.me/5554996895454?text=${encodedMsg}" target="_blank" rel="noopener" style="display:inline-block; margin-top:14px; padding:10px 20px; background:#25D366; color:#fff; border-radius:24px; font-weight:600; text-decoration:none;">Falar imediatamente no WhatsApp →</a>`;
-      if (successMsg) {
-        successMsg.innerHTML += waBtnHtml;
-      }
-
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalBtnText;
-      }
-
-      leadForm.reset();
     });
   }
 
-  // Helper: Lead Backup Local Storage
-  function saveLeadBackupLocally(leadData) {
-    try {
-      const existingLeads = JSON.parse(localStorage.getItem('phoenix_rise_leads') || '[]');
-      existingLeads.push(leadData);
-      localStorage.setItem('phoenix_rise_leads', JSON.stringify(existingLeads));
-    } catch (err) {
-      console.error('Local backup failed', err);
-    }
-  }
-
-  // 4. Smooth scroll active state highlighting
+  // Active navigation highlight on scroll
   const sections = document.querySelectorAll('section[id]');
   window.addEventListener('scroll', () => {
     const scrollY = window.pageYOffset;
