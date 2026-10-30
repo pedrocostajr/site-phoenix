@@ -1350,28 +1350,218 @@ select.form-control option {
 /* ---------- FOOTER ---------- */
 footer {
   border-top: 1px solid var(--border-glass-dark);
-  padding: 48px 0;
+  padding: 56px 0 32px;
   background: var(--bg-black);
 }
 
-.footer-row {
+.footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1.3fr 1.7fr;
+  gap: 48px;
+  margin-bottom: 40px;
+}
+
+.footer-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.footer-brand-col .brand img {
+  height: 28px;
+  width: auto;
+}
+
+.footer-desc {
+  color: var(--text-on-dark-dim);
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 16px 0 20px;
+  max-width: 320px;
+}
+
+.footer-social .social-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--blue-bright);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.footer-social .social-link:hover {
+  opacity: 0.8;
+}
+
+.footer-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 18px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.footer-nav {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.footer-nav a {
+  color: var(--text-on-dark-dim);
+  text-decoration: none;
+  transition: color 0.2s, transform 0.2s;
+  display: inline-block;
+}
+
+.footer-nav a:hover {
+  color: var(--blue-bright);
+  transform: translateX(2px);
+}
+
+.footer-bottom {
+  border-top: 1px solid var(--border-glass-dark);
+  padding-top: 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-on-dark-dim);
   flex-wrap: wrap;
-  gap: 24px;
+  gap: 16px;
 }
 
-.footer-links {
+.footer-bottom-links {
   display: flex;
-  align-items: center;
-  gap: 28px;
+  gap: 20px;
 }
 
-.footer-links a:hover {
+.footer-bottom-links a {
+  color: var(--text-on-dark-dim);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-bottom-links a:hover {
   color: var(--blue-bright);
+}
+
+@media (max-width: 860px) {
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+
+/* ---------- RELATED POSTS & SERVICE CTA IN ARTICLES ---------- */
+.article-related-section {
+  margin-top: 48px;
+  padding-top: 36px;
+  border-top: 1px solid var(--border-glass-dark);
+}
+
+.article-related-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #fff;
+}
+
+.article-related-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 32px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.article-related-list li a {
+  color: var(--blue-cyan);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.article-related-list li a:hover {
+  color: #fff;
+  transform: translateX(4px);
+}
+
+.article-service-cta {
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  border-radius: var(--radius-lg);
+  padding: 24px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.article-service-cta h4 {
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.article-service-cta p {
+  color: var(--text-on-dark-dim);
+  font-size: 14px;
+  margin: 0;
+}
+
+/* ---------- RELATED BLOG ARTICLES IN SERVICE PAGES ---------- */
+.service-related-box {
+  margin-top: 48px;
+  padding: 28px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-glass-dark);
+  border-radius: var(--radius-lg);
+}
+
+.service-related-box h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 16px;
+}
+
+.service-related-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.service-related-list li a {
+  color: var(--blue-cyan);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.2s, transform 0.2s;
+}
+
+.service-related-list li a:hover {
+  color: #fff;
+  transform: translateX(4px);
 }
 
 /* ---------- RESPONSIVE BREAKPOINTS ---------- */
